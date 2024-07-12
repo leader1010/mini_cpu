@@ -1,0 +1,2 @@
+`define OPCODE_BRANCH 7'b11_000_11
+`define OPCODE_JAL 7'b 11_011_11
