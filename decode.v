@@ -72,7 +72,15 @@ assign {branch, jump, mem_read, mem_write, reg_write, to_reg, result_sel, alu_sr
 
 // -------------------- IMM -------------------------
 
-wire [31:0] Bimm = {instr[31], instr[7], instr[30:25], instr[11:7]};
+wire [31:0] Iimm = {{21{instr[31]}}, instr[30:20]};
+wire [31:0] Simm = {{21{instr[31]}}, instr[30:25], instr[11:7]};
+wire [31:0] Bimm = {{20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0};
+wire [31:0] Uimm = {instr[31:12], 12'b0};
+wire [31:0] Jimm = {{12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0};   
 
-
+assign imm = {32{types[5]}} & Iimm
+           | {32{types[4]}} & Simm
+           | {32{types[3]}} & Bimm
+           | {32{types[2]}} & Uimm
+           | {32{types[1]}} & Jimm;
 endmodule
