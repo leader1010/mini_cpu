@@ -49,6 +49,21 @@ module id_ex_ctrl(
   reg  reg_noflush; 
 
 
+  assign out_ex_ctrl_itype = reg_ex_ctrl_itype; 
+  assign out_ex_ctrl_alu_ctrlop = reg_ex_ctrl_alu_ctrlop; 
+  assign out_ex_ctrl_result_sel = reg_ex_ctrl_result_sel; 
+  assign out_ex_ctrl_alu_src = reg_ex_ctrl_alu_src; 
+  assign out_ex_ctrl_pc_add = reg_ex_ctrl_pc_add; 
+  assign out_ex_ctrl_branch = reg_ex_ctrl_branch; 
+  assign out_ex_ctrl_jump = reg_ex_ctrl_jump; 
+  assign out_mem_ctrl_mem_read = reg_mem_ctrl_mem_read; 
+  assign out_mem_ctrl_mem_write = reg_mem_ctrl_mem_write; 
+  assign out_mem_ctrl_mask_mode = reg_mem_ctrl_mask_mode; 
+  assign out_mem_ctrl_sext = reg_mem_ctrl_sext; 
+  assign out_wb_ctrl_to_reg = reg_wb_ctrl_to_reg; 
+  assign out_wb_ctrl_reg_write = reg_wb_ctrl_reg_write; 
+  assign out_noflush = reg_noflush; 
+
 
   always @(posedge clk or posedge reset) begin
     if (reset) begin 
