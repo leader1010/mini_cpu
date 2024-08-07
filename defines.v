@@ -10,6 +10,20 @@
 `define ALU_OP_OR       4'b0110
 `define ALU_OP_AND      4'b0111
 
+`define ALU_OP_EQ       4'b1001
+`define ALU_OP_NEQ      4'b1010
+`define ALU_OP_GE       4'b1100
+`define ALU_OP_GEU      4'b1011
+
+`define ALU_OP_XXX      4'b1111
+
+// RISC-VReference B型指令 funct3
+`define BEQ_FUNCT3      3'b000
+`define BNE_FUNCT3      3'b001
+`define BLT_FUNCT3      3'b100
+`define BGE_FUNCT3      3'b101
+`define BLTU_FUNCT3     3'b110
+`define BGEU_FUNCT3     3'b111
 
 `define OPCODE_LUI             7'b01_101_11
 `define OPCODE_AUIPC           7'b00_101_11
