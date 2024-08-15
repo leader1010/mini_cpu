@@ -91,3 +91,60 @@ always @(posedge clock) begin
     end end
 ``````
 
+
+
+## 译码阶段 
+
+控制逻辑和数据传输逻辑分开
+
+### 译码模块 decode
+
+解析出功能码funct3 funct7，源寄存器 rs1，rs2，目标寄存器rd 以及立即数（见github代码仓）
+
+``````verilog
+//---------- decode rs1、rs2 -----------------
+assign rs1_addr = instr[19:15]; 
+assign rs2_addr = instr[24:20];
+//---------- decode rd -----------------------
+assign rd_addr = instr[11:7]; 
+//---------- decode funct3、funct7 -----------
+assign funct7 = instr[31:25]; 
+assign funct3 = instr[14:12]; 
+``````
+
+
+
+### 译码控制模块  id_ex_ctrl
+
+  从存储器中读取出来的指令，不一定都能够给到执行单元去执行的。比如，当指令发生冲突时，需要对流水线进行冲刷，这时就需要清除流水线中的指令。同样的，译码阶段的指令信号也需要清除。译码控制模块就是为了实现这一功能。而此模块负责处理控制信号，例如跳转 (`jump`)、分支 (`branch`)、内存读取 (`mem_read`)、内存写入 (`mem_write`)、寄存器写入 (`reg_write`) 等信号
+
+``````verilog
+always @(posedge clk or posedge reset) begin
+    if (reset) begin
+        reg_noflush <= 1'h0;
+    end else if (flush) begin
+        reg_noflush <= 1'h0;
+    end else if (valid) begin
+        reg_noflush <= in_noflush;
+    end
+end
+``````
+
+
+
+### 译码数据通路模块 id_ex
+
+​	此模块负责处理数据信息,入rs2数据
+
+``````verilog
+always @(posedge clk or posedge reset) begin
+    if (reset) begin
+        reg_rs2_addr <= 5'h0;
+    end else if (flush) begin
+        reg_rs2_addr <= 5'h0;
+    end else if (valid) begin
+        reg_rs2_addr <= in_rs2_addr;
+    end
+end
+``````
+
