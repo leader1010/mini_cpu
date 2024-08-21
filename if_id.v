@@ -17,6 +17,10 @@ module if_id (
     // 其他上下文中使用
     reg [31:0] reg_pc_next;
     reg reg_noflush;
+
+    assign out_instr = reg_instr; 
+    assign out_pc = reg_pc; 
+    assign out_noflush = reg_noflush; 
     
     // 指令传递
     always @(posedge clk or posedge reset) begin
