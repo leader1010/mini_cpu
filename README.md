@@ -1,5 +1,7 @@
 # mini_cpu
-my mini_cpu by RISC-V
+ mini_cpu by RISC-V
+
+
 
 ## CPU架构设计
 
@@ -22,6 +24,8 @@ my mini_cpu by RISC-V
 写回阶段（Write-Back）：写回是指将指令执行的结果写回通用寄存器的过程。如果是普通运算指令，该结果值来自于“执行”阶段计算的结果；如果是存储器读指令，该结果来自于“访存”阶段从存储器中读取出来的数据。
 
 可相应设计5个模块
+
+
 
 
 
@@ -93,6 +97,8 @@ always @(posedge clock) begin
 
 
 
+
+
 ## 译码阶段 
 
 控制逻辑和数据传输逻辑分开
@@ -147,4 +153,77 @@ always @(posedge clk or posedge reset) begin
     end
 end
 ``````
+
+
+
+
+
+## 执行阶段
+
+  执行阶段可将指令分为三类**算术逻辑指令**、**分支跳转指令**、**存储器访问指令**。在 ALU 模块中，指令可以分成三类来处理：**第一类是普通的 ALU 指令，包括逻辑运算、移位操作等指令；第二类指令负责完成存储器访问指令 Load 和 Store 的地址生成工作；第三类是负责分支跳转指令的结果解析和执行。**这就是流水线执行阶段的核心模块 ALU 的设计思路。
+
+![image-20240825225551730](https://s2.loli.net/2024/08/25/8sBAHuJdSVbvz5h.png)
+
+
+
+### 执行控制模块 alu_ctrl
+
+  在译码模块里根据指令的 7 位操作码 opcode 字段，还产生了一个 ALU 执行的指令控制字段 aluCrtlOp。
+
+![image-20240825232741256](https://s2.loli.net/2024/08/25/HtUXcLFJVW5Of2Y.png)
+
+  根据 2 位执行类型字段 aluCrtlOp，以及指令译码得到的操作码 funct7 和 funct3，就可以设计执行控制模块了
+
+~~~~~~verilog
+module ALUCtrl (
+    input [2:0]  funct3,
+    input [6:0]  funct7,
+    input [1:0]  aluCtrlOp,
+    input        itype,
+    output reg [3:0] aluOp
+);
+    always @(*) begin
+      case(aluCtrlOp)
+        2'b00:  aluOp <= `ALU_OP_ADD;           // Load/Store
+        2'b01:  begin
+          if(itype & funct3[1:0] != 2'b01)
+            aluOp <= {1'b0, funct3};
+          else
+            aluOp <= {funct7[5], funct3};   // normal ALUI/ALUR
+        end
+        2'b10:  begin
+          case(funct3)                    // bxx
+            `BEQ_FUNCT3:  aluOp <= `ALU_OP_EQ;
+            `BNE_FUNCT3:  aluOp <= `ALU_OP_NEQ;
+            `BLT_FUNCT3:  aluOp <= `ALU_OP_SLT;
+            `BGE_FUNCT3:  aluOp <= `ALU_OP_GE;
+            `BLTU_FUNCT3: aluOp <= `ALU_OP_SLTU;
+            `BGEU_FUNCT3: aluOp <= `ALU_OP_GEU;
+            default:      aluOp <= `ALU_OP_XXX;
+          endcase
+          end
+        default: aluOp <= `ALU_OP_XXX;
+      endcase
+    end
+endmodule
+~~~~~~
+
+  这里要注意的是，当 aluCtrlOp 等于（01）时，需要根据 funct3 和 funct7 产生 ALU 的操作码。在前面的译码模块中，已经为我们提供了 I 型指令类型的判断信号 itype。如果是 itype 信号等于“1”，操作码直接由 funct3 和高位补“0”组成；如果不是 I 型指令，ALU 操作码则要由 funct3 和 funct7 的第五位组成。
+
+
+
+### 通用寄存器 gen_reg
+
+​    在 ALU 模块开始执行运算之前，还需要提前完成一个操作——读取通用寄存器。在参与 ALU 逻辑运算的两个操作数中，至少有一个来自于通用寄存器，另一个可以来自于通用寄存器或者指令自带的立即数。另外，**处于流水线上的指令是并发执行的，在读取通用寄存器的同时，可能还需要写入数据到通用寄存器，所以需要一套写地址和写数据接口**
+
+~~~~~~verilog
+assign regRData1 = wen & (regWAddr == regRAddr1) ? regWData : ((regRAddr1 != 5'b0) ? regs[regRAddr1] : 32'b0); 
+assign regRData2 = wen & (regWAddr == regRAddr2) ? regWData : ((regRAddr2 != 5'b0) ? regs[regRAddr2] : 32'b0);
+~~~~~~
+
+
+
+### ALU 模块设计 alu
+
+略
 
